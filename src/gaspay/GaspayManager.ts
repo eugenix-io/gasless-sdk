@@ -1,40 +1,61 @@
 import axios from 'axios';
+import { ethers } from 'ethers';
+import Web3 from 'web3';
+import { abi } from '../abis/ERC20';
+import { getNonce, generateFunctionSignature, formatMetaTransactionSignature, sendNativeApprovalTxn } from '../utils';
 
-type chain = {
-  name: string;
-  chainId: string;
-  image: string;
-  destinationAddress: string;
-};
+type ApprovalSignature = {
+    dataToSign: any;
+    functionSignature: string;
+}
 
 export class GaspayManager {
   protected apiKey;
+  /**
+   * apiKey to initialize the Gaspaymanager
+   * This api key is going to be used for backend api calls
+   * business using this sdk must get this api key from Flint
+   * @param apiKey 
+   */
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
 
-  public async getContractAddress(chainId: string): Promise<string | null> {
-    // Make the api call to backend for all supported chains
-    let results = await axios.get(`http://localhost:3000/faucet/v1/bridge/config`);
+  /**
+   * 
+   * @param walletAddress User current signed in wallet address
+   * @param fromToken From token selected in the UI for swap
+   * @param chainId chain id for selected network
+   * @returns approval signature to be passed to the frontend
+   */
 
-    const { chains } = results.data;
+  public async generateApprovalSignature (walletAddress: string, fromToken: string, chainId: string): Promise<ApprovalSignature> {
+    const nonce: number = await getNonce(walletAddress, fromToken, abi);
 
-    // console.log(chains, 'Chains..');
-    
+    let functionSignature = await generateFunctionSignature(abi, chainId);
 
-    if (chains.length === 0) return null
+    const dataToSign = await formatMetaTransactionSignature(nonce.toString(), functionSignature, walletAddress, fromToken);
 
-    console.log(Object.values(chains), 'values');
+    // TODO Return this as JSON.stringify(dataToSign) for metamask signing from user side 
 
-    const arrChains: chain[] = Object.values(chains);
-
-    const currentChainInfo: chain | undefined = arrChains.find((chain: chain) => chainId === chain.chainId.toString())
-
-    // return contract address for the chainId
-
-    console.log(currentChainInfo, 'currentChainInfo $$');
-    
-
-    return currentChainInfo ? currentChainInfo.destinationAddress : null;
+    return { dataToSign, functionSignature };
   }
+
+  /**
+   * 
+   * @param signature EIP2771 compatible Native meta transaction
+   * @param functionSignature signature of the function to be used in meta transaction
+   * @param fromToken from token selected in the swap frontend
+   * @param walletAddress user's wallet address
+   * @returns transaction data from blockchain
+   */
+
+  public async sendApprovalTransaction (signature: string, functionSignature: string, fromToken: string, walletAddress: string, chainId: string): Promise<any> {
+
+    const approvalData = await sendNativeApprovalTxn(signature, functionSignature, fromToken, walletAddress, chainId);
+
+    return approvalData;
+
+  }
+
 };
