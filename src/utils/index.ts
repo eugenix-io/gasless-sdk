@@ -1,8 +1,7 @@
 import { ethers } from "ethers";
 import { abi } from '../abis/ERC20';
 import axios from "axios";
-
-const Web3 = require('web3')
+import Web3 from 'web3';
 
 type Chain = {
     name: string;
@@ -77,29 +76,27 @@ export const getSignatureParameters = (signature: string) => {
             'Given value "'.concat(signature, '" is not a valid hex string.')
         );
     }
-    const r = signature.slice(0, 66);
-    const s = '0x'.concat(signature.slice(66, 130));
-    let v: any = '0x'.concat(signature.slice(130, 132));
-    v = Web3.utils.hexToNumber(v);
-    if (![27, 28].includes(v)) v += 27;
+    const sigR = signature.slice(0, 66);
+    const sigS = '0x'.concat(signature.slice(66, 130));
+    let sigV: any = '0x'.concat(signature.slice(130, 132));
+    sigV = Web3.utils.hexToNumber(sigV);
+    if (![27, 28].includes(sigV)) sigV += 27;
     return {
-        r: r,
-        s: s,
-        v: v,
+        r: sigR,
+        s: sigS,
+        v: sigV,
     };
 };
 
-export const getNonce = async (walletAddress: string, targetContract: string, abi: any): Promise<number> => {
+export const getNonce = async (walletAddress: string, targetContract: string, targetAbi: any): Promise<number> => {
     // TODO Get config for provider URLs from backend
     const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/6YG2I64dtdEnsF68sTYQIYy--Fa5roqh');
 
-    const tokenContract = new ethers.Contract(targetContract, abi, provider);
+    const tokenContract = new ethers.Contract(targetContract, targetAbi, provider);
 
     const nonce = await tokenContract.getNonce(walletAddress);
 
-    console.log(nonce);
-
-    return parseInt(nonce);
+    return parseInt(nonce, 10);
     
 }
 
@@ -122,8 +119,8 @@ export const getContractAddress = async (chainId: string): Promise<string> => {
     throw new Error(ERROR.UNSUPPORTED);
   }
 
-  export const generateFunctionSignature = async (abi: any, chainId: string) => {
-    let iface = new ethers.Interface(abi);
+  export const generateFunctionSignature = async (targetAbi: any, chainId: string) => {
+    const iface = new ethers.Interface(targetAbi);
     // Approve amount for spender 1 matic
     return iface.encodeFunctionData('approve', [
         await getContractAddress(chainId),
@@ -132,17 +129,17 @@ export const getContractAddress = async (chainId: string): Promise<string> => {
 };
 
 const getName = async (tokenAddress: string) => {
-    //update method to check if ABI has getNonce or nonces
+    // update method to check if ABI has getNonce or nonces
     const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/6YG2I64dtdEnsF68sTYQIYy--Fa5roqh');
-    let tokenContract = new ethers.Contract(tokenAddress, abi, provider);
+    const tokenContract = new ethers.Contract(tokenAddress, abi, provider);
     return await tokenContract.name();
 };
 
-export const formatMetaTransactionSignature = async (nonce: string, functionSignature: string, walletAddress: string, fromToken: string) => {
-    let message: ApprovalMessage = {
-        nonce: parseInt(nonce),
+export const formatMetaTransactionSignature = async (nonce: string, targetFunctionSignature: string, walletAddress: string, fromToken: string) => {
+    const messagePayload: ApprovalMessage = {
+        nonce: parseInt(nonce, 10),
         from: walletAddress,
-        functionSignature: functionSignature,
+        functionSignature: targetFunctionSignature,
     };
 
     const dataToSign = {
@@ -157,17 +154,15 @@ export const formatMetaTransactionSignature = async (nonce: string, functionSign
             salt: '0x0000000000000000000000000000000000000000000000000000000000000089',
         },
         primaryType: 'MetaTransaction',
-        message: message,
+        message: messagePayload,
     };
     
 
     return dataToSign;
 }
 
-export const sendNativeApprovalTxn = async (signature: string, functionSignature: string, fromToken: string, walletAddress: string, chainId: string) => {
+export const sendNativeApprovalTxn = async (signature: string, functionSignature: string, fromToken: string, walletAddress: string, targetChainId: string) => {
     const { r, s, v } = getSignatureParameters(signature);
-
-    console.log(r, s, v, "Signature RSV");
 
 
     const approvalData: ApprovalData = {
@@ -178,7 +173,7 @@ export const sendNativeApprovalTxn = async (signature: string, functionSignature
             functionSignature,
             userAddress: walletAddress,
         },
-        chainId: chainId,
+        chainId: targetChainId,
         type: 'EMT',
         approvalContractAddress: fromToken
     };
@@ -187,8 +182,6 @@ export const sendNativeApprovalTxn = async (signature: string, functionSignature
         `http://localhost:3000/faucet/v1/swap/approve`,
         approvalData
     );
-
-    console.log(txResp.data, "Response data from backend");
 
     return txResp.data;
     

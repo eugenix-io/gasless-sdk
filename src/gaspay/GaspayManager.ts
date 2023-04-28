@@ -1,6 +1,3 @@
-import axios from 'axios';
-import { ethers } from 'ethers';
-import Web3 from 'web3';
 import { abi } from '../abis/ERC20';
 import { getNonce, generateFunctionSignature, formatMetaTransactionSignature, sendNativeApprovalTxn } from '../utils';
 
@@ -32,7 +29,7 @@ export class GaspayManager {
   public async generateApprovalSignature (walletAddress: string, fromToken: string, chainId: string): Promise<ApprovalSignature> {
     const nonce: number = await getNonce(walletAddress, fromToken, abi);
 
-    let functionSignature = await generateFunctionSignature(abi, chainId);
+    const functionSignature = await generateFunctionSignature(abi, chainId);
 
     const dataToSign = await formatMetaTransactionSignature(nonce.toString(), functionSignature, walletAddress, fromToken);
 
