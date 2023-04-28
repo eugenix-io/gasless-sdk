@@ -1,8 +1,8 @@
-import { ethers } from "ethers";
 import { abi } from '../abis/ERC20';
-import axios from "axios";
 import Web3 from 'web3';
-
+import axios from 'axios';
+// @ts-expect-error
+import { ethers } from 'ethers'
 type Chain = {
     name: string;
     chainId: string;
