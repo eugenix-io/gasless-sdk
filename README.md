@@ -80,8 +80,6 @@ And voilà!! You have gasless feature enabled in your dApp with just a few lines
 
 ## API Reference
 
-#### Get all items
-
 ```bash
 generateApprovalSignature(walletAddress: string, fromToken: string, chainId: string): Promise<ApprovalSignature>;
 ```
@@ -92,7 +90,6 @@ generateApprovalSignature(walletAddress: string, fromToken: string, chainId: str
 | `fromToken` | `string` | **Required**. ERC20 token in for approval |
 | `chainId` | `string` | **Required**. Current chain id of the connected account |
 
-#### Get item
 
 ```bash
   sendApprovalTransaction(signature: string, functionSignature: string, fromToken: string, walletAddress: string, chainId: string): Promise<any>;
@@ -105,10 +102,6 @@ generateApprovalSignature(walletAddress: string, fromToken: string, chainId: str
 | `fromToken`      | `string` | **Required**. ERC20 token address for approval
 | `walletAddress`      | `string` | **Required**. Wallet address of the connected user
 | `chainId`      | `string` | **Required**. Current chain id of the connected account
-
-#### add(num1, num2)
-
-Takes two numbers and returns the sum.
 
 
 ## Authors
