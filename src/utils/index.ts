@@ -1,8 +1,11 @@
 import { abi } from '../abis/ERC20';
+import { flintABI } from '../abis/FlintABI';
 import Web3 from 'web3';
 import axios from 'axios';
 // @ts-expect-error
-import { ethers } from 'ethers'
+import { ethers, Contract } from 'ethers';
+
+
 type Chain = {
     name: string;
     chainId: string;
@@ -27,6 +30,10 @@ type ApprovalData = {
     chainId: string;
     type: string;
     approvalContractAddress: string
+}
+
+enum FlintContracts {
+    POLYGON = '0xae294F66775eDd9C81f4540eAdA41Bc1E4eE22AD'
 }
   
 enum ERROR {
@@ -119,13 +126,34 @@ export const getContractAddress = async (chainId: string): Promise<string> => {
     throw new Error(ERROR.UNSUPPORTED);
   }
 
-  export const generateFunctionSignature = async (targetAbi: any, chainId: string) => {
+export const generateFunctionSignature = async (targetAbi: any, chainId: string) => {
     const iface = new ethers.Interface(targetAbi);
     // Approve amount for spender 1 matic
     return iface.encodeFunctionData('approve', [
         await getContractAddress(chainId),
         ethers.parseEther('10000'),
     ]);
+};
+
+const getFlintContractAddress = (chainId: string): string => {
+    switch(chainId) {
+        case '137':
+            return FlintContracts.POLYGON
+        default:
+            return FlintContracts.POLYGON;
+    }
+}
+
+
+
+export const getFlintContractDetails = (chainId: string): any => {
+
+    // TODO Get token contract from backend based on chainId
+    const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/6YG2I64dtdEnsF68sTYQIYy--Fa5roqh');
+    const contractAddress = getFlintContractAddress(chainId);
+    const flintContract: Contract = new ethers.Contract(contractAddress, flintABI, provider);
+    return  { flintContract, contractAddress };
+
 };
 
 const getName = async (tokenAddress: string) => {

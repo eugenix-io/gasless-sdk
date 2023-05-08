@@ -1,4 +1,5 @@
 import { abi } from '../abis/ERC20';
+import { getMerchantForSwapTransaction } from '../factories/merchant.factory';
 import { getNonce, generateFunctionSignature, formatMetaTransactionSignature, sendNativeApprovalTxn } from '../utils';
 
 type ApprovalSignature = {
@@ -6,8 +7,42 @@ type ApprovalSignature = {
     functionSignature: string;
 }
 
+type Provider = {
+  chainId: string;
+  rpcUrl: string;
+  flintContract: string;
+}
+
+interface SwapData {
+  callTo: string;
+  approveTo: string;
+  sendingAssetId: string;
+  receivingAssetId: string;
+  fromAmount: string;
+  callData: string;
+  requiresDeposit: boolean;
+}
+interface JumperExchangeParams {
+  data: string;
+  _integrator: string;
+  _referrer: string;
+  _receiver: string;
+  _minAmount: string;
+  _swapData: SwapData
+
+}
+
+const providers: Record<number, Provider> = {
+  137: {
+    chainId: '137',
+    rpcUrl: 'https://polygon-mainnet.g.alchemy.com/v2/6YG2I64dtdEnsF68sTYQIYy--Fa5roqh',
+    flintContract: ''
+  }
+}
+
 export class GaspayManager {
   protected apiKey;
+  protected providerInfo = {};
   /**
    * apiKey to initialize the Gaspaymanager
    * This api key is going to be used for backend api calls
@@ -16,6 +51,9 @@ export class GaspayManager {
    */
   constructor(apiKey: string) {
     this.apiKey = apiKey;
+    // TODO Download the config from backend on initalization
+    // Things like provider Urls, flint contract info etc
+    this.providerInfo = {}
   }
 
   /**
@@ -53,6 +91,29 @@ export class GaspayManager {
 
     return approvalData;
 
+  }
+
+  /**
+   * 
+   * @param merchantApiKey Merchant API key given by Flint to merchant on onboarding
+   * @param params Params required to sign 
+   * @param chainId connected chainId of user wallet
+   * @param walletAddress connected user's wallet address
+   * @returns signature to be signed by user
+   */
+
+  public async generateSwapSignature (merchantApiKey: string, params: any, chainId: string, walletAddress: string): Promise<string> {
+    // Get the provider
+    const swapProvider: any = getMerchantForSwapTransaction(merchantApiKey);
+    const sigToSign = await swapProvider.getSwapSignature(params, chainId, walletAddress);
+
+    return sigToSign;
+  }
+
+  public async sendSwapTransaction (merchantApiKey: string, signature: string, params: any, chainId: string, walletAddress: string): Promise<any> {
+    // Get the provider
+    const swapProvider: any = getMerchantForSwapTransaction(merchantApiKey);
+    swapProvider.swapTransaction(signature, params, chainId, walletAddress, merchantApiKey);
   }
 
 };
