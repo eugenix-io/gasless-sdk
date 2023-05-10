@@ -14,7 +14,7 @@ interface SwapData {
     requiresDeposit: boolean;
 }
 interface JumperExchangeParams {
-    data: string;
+    _transactionId: string
     _integrator: string;
     _referrer: string;
     _receiver: string;
@@ -24,12 +24,12 @@ interface JumperExchangeParams {
 }
 
 const SwapWithJumperGasless = [
-    {type: 'address', name: 'callTo'},
-    {type: 'address', name: 'approveTo'},
-    {type: 'address', name: 'sendingAssetId'},
-    {type: 'address', name: 'receivingAssetId'},
-    {type: 'uint', name: 'fromAmount'},
-    {type: 'bool', name: 'requiresDeposit'}
+    {type: 'bytes32', name: '_transactionId'},
+    {type: 'string', name: '_integrator'},
+    {type: 'string', name: '_referrer'},
+    {type: 'address', name: '_receiver'},
+    {type: 'uint256', name: '_minAmount'},
+    {type: 'uint', name: 'nonce'},
 ];
 
 const domainType = [
@@ -68,25 +68,24 @@ const swapTransaction = async (signature: string, params: JumperExchangeParams, 
 const getSwapSignature = async (params: JumperExchangeParams, chainId: string, walletAddress: string) => {
     const { flintContract, contractAddress } = getFlintContractDetails(chainId);
 
-    const NONCE = await flintContract.getNonce(walletAddress);
+    const NONCE = await flintContract.getNonces(walletAddress);
 
     const {
-        callTo,
-        approveTo,
-        sendingAssetId,
-        receivingAssetId,
-        fromAmount,
-        requiresDeposit
-    } = params._swapData;
+        _transactionId,
+        _integrator,
+        _referrer,
+        _receiver,
+        _minAmount,
+        _swapData
+    } = params;
 
     // Format message to be signed
     let message = {
-        callTo,
-        approveTo,
-        sendingAssetId,
-        receivingAssetId,
-        fromAmount,
-        requiresDeposit,
+        _integrator,
+        _transactionId,
+        _referrer,
+        _receiver,
+        _minAmount,
         nonce: NONCE
     };
 

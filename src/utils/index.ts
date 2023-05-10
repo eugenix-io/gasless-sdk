@@ -55,27 +55,6 @@ const metaTransactionType = [
     { name: 'functionSignature', type: 'bytes' },
 ];
 
-const swapWithoutFees = [
-    { type: 'uint', name: 'amountIn' },
-    { type: 'address', name: 'tokenIn' },
-    { type: 'address', name: 'tokenOut' },
-    { type: 'address', name: 'userAddress' },
-    { type: 'address[]', name: 'path' },
-    { type: 'uint24[]', name: 'fees' },
-    { type: 'uint', name: 'nonce' },
-    { type: 'bool', name: 'isTokenOutNative' },
-];
-
-const SwapOnSushiParams = [
-    { type: 'address', name: 'tokenIn' },
-    { type: 'uint', name: 'amountIn' },
-    { type: 'address', name: 'tokenOut' },
-    { type: 'uint', name: 'amountOutMin' },
-    { type: 'address', name: 'to' },
-    { type: 'uint', name: 'nonce' },
-    { type: 'bytes', name: 'route'}
-];
-
 
 export const getSignatureParameters = (signature: string) => {
     if (!Web3.utils.isHexStrict(signature)) {
@@ -149,7 +128,7 @@ const getFlintContractAddress = (chainId: string): string => {
 export const getFlintContractDetails = (chainId: string): any => {
 
     // TODO Get token contract from backend based on chainId
-    const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/6YG2I64dtdEnsF68sTYQIYy--Fa5roqh');
+    const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/oYL3zphjRJ5SgPB04yLeh2oh0BvtcQuI');
     const contractAddress = getFlintContractAddress(chainId);
     const flintContract: Contract = new ethers.Contract(contractAddress, flintABI, provider);
     return  { flintContract, contractAddress };
@@ -158,7 +137,7 @@ export const getFlintContractDetails = (chainId: string): any => {
 
 const getName = async (tokenAddress: string) => {
     // update method to check if ABI has getNonce or nonces
-    const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/6YG2I64dtdEnsF68sTYQIYy--Fa5roqh');
+    const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/oYL3zphjRJ5SgPB04yLeh2oh0BvtcQuI');
     const tokenContract = new ethers.Contract(tokenAddress, abi, provider);
     return await tokenContract.name();
 };
