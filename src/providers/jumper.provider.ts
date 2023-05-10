@@ -24,7 +24,10 @@ interface JumperExchangeParams {
 }
 
 const SwapWithJumperGasless = [
-    {type: 'uint', name: 'nonce'},
+    { type: 'uint', name: 'nonce' },
+    { type: 'uint', name: 'minAmount'},
+    { type: 'address', name: 'receiver'},
+    { type: 'bytes32', name: 'transactionId'}
 ];
 
 const domainType = [
@@ -75,8 +78,11 @@ const getSwapSignature = async (params: JumperExchangeParams, chainId: string, w
     } = params;
 
     // Format message to be signed
-    let message = {
-        nonce: parseInt(NONCE, 10)
+    const message = {
+        nonce: parseInt(NONCE, 10),
+        minAmount: _minAmount,
+        receiver: _receiver,
+        transactionId: _transactionId
     };
 
     const salt = '0x0000000000000000000000000000000000000000000000000000000000000089';
