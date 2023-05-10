@@ -76,9 +76,31 @@ const txDetails = await gaspayManager.sendApprovalTransaction(
     );
 ```
 
+**Get signature for SWAP**
+```bash
+const swapSig = await gaspayManager.generateSwapSignature(
+    merchantApiKey,
+    params,
+    chainId,
+    walletAddress
+)
+```
+**Send the SWAP signature**
+```bash
+const result = await gaspayManager.sendSwapTransaction(
+    merchantApiKey,
+    signature,
+    params,
+    chainId,
+    walletAddress
+)
+```
+
 And voilà!! You have gasless feature enabled in your dApp with just a few lines of code 🥳
 
 ## API Reference
+
+#### Generate approval signature
 
 ```bash
 generateApprovalSignature(walletAddress: string, fromToken: string, chainId: string): Promise<ApprovalSignature>;
@@ -90,6 +112,7 @@ generateApprovalSignature(walletAddress: string, fromToken: string, chainId: str
 | `fromToken` | `string` | **Required**. ERC20 token in for approval |
 | `chainId` | `string` | **Required**. Current chain id of the connected account |
 
+#### Send approval transaction
 
 ```bash
   sendApprovalTransaction(signature: string, functionSignature: string, fromToken: string, walletAddress: string, chainId: string): Promise<any>;
@@ -102,6 +125,34 @@ generateApprovalSignature(walletAddress: string, fromToken: string, chainId: str
 | `fromToken`      | `string` | **Required**. ERC20 token address for approval
 | `walletAddress`      | `string` | **Required**. Wallet address of the connected user
 | `chainId`      | `string` | **Required**. Current chain id of the connected account
+
+#### Get swap signature
+
+```bash
+  generateSwapSignature (merchantApiKey: string, params: any, chainId: string, walletAddress: string): Promise<string>
+```
+
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `merchantApiKey`      | `string` | **Required**. Merchant api key provided by flint 
+| `params`      | `any` | **Required**. Parameters required for swap in case of the specific merchant
+| `chainId`      | `string` | **Required**. connected chainId of user's wallet
+| `walletAddress`      | `string` | **Required**. Wallet address of the connected user
+
+#### Send swap transaction
+
+```bash
+  sendSwapTransaction (merchantApiKey: string, signature: string, params: any, chainId: string, walletAddress: string): Promise<any>
+```
+
+| Parameter | Type     | Description                       |
+| :-------- | :------- | :-------------------------------- |
+| `merchantApiKey`      | `string` | **Required**. Merchant api key provided by flint 
+| `signature`      | `string` | **Required**. user signed signature for swap
+| `params`      | `any` | **Required**. Parameters required for swap in case of the specific merchant
+| `chainId`      | `string` | **Required**. connected chainId of user's wallet
+| `walletAddress`      | `string` | **Required**. Wallet address of the connected user
+
 
 
 ## Authors

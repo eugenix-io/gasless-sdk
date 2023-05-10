@@ -24,11 +24,6 @@ interface JumperExchangeParams {
 }
 
 const SwapWithJumperGasless = [
-    {type: 'bytes32', name: '_transactionId'},
-    {type: 'string', name: '_integrator'},
-    {type: 'string', name: '_referrer'},
-    {type: 'address', name: '_receiver'},
-    {type: 'uint256', name: '_minAmount'},
     {type: 'uint', name: 'nonce'},
 ];
 
@@ -44,7 +39,7 @@ const swapTransaction = async (signature: string, params: JumperExchangeParams, 
 
     const { flintContract, contractAddress } = getFlintContractDetails(chainId);
 
-    const NONCE = await flintContract.getNonce(walletAddress);
+    const NONCE = await flintContract.getNonces(walletAddress);
 
     const { r, s, v } = getSignatureParameters(signature);
 
@@ -54,7 +49,7 @@ const swapTransaction = async (signature: string, params: JumperExchangeParams, 
         sigS: s,
         sigV: v,
         chainId,
-        nonce: NONCE,
+        nonce: parseInt(NONCE, 10),
         walletAddress,
         merchantApiKey
     };
@@ -81,12 +76,7 @@ const getSwapSignature = async (params: JumperExchangeParams, chainId: string, w
 
     // Format message to be signed
     let message = {
-        _integrator,
-        _transactionId,
-        _referrer,
-        _receiver,
-        _minAmount,
-        nonce: NONCE
+        nonce: parseInt(NONCE, 10)
     };
 
     const salt = '0x0000000000000000000000000000000000000000000000000000000000000089';
