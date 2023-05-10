@@ -13,6 +13,11 @@ type Chain = {
     destinationAddress: string;
 };
 
+type GaspayConfig = {
+    contractUrl: string;
+    providerUrl: string;
+}
+
 type ApprovalMessage = {
     nonce: number;
     from: string;
@@ -192,4 +197,21 @@ export const sendNativeApprovalTxn = async (signature: string, functionSignature
 
     return txResp.data;
     
+}
+
+export const getGaspayConfig = async (chainId: string): Promise<GaspayConfig | undefined> => {
+
+    try {
+        const resp = await axios.get(`http://localhost:3000/faucet/v1/config/gas-router-config?chainId=${chainId}`);
+        const result: GaspayConfig = resp.data;
+
+        return result
+
+    } catch (error) {
+        console.log(error, 'Error in getGaspayConfig');
+        
+    }
+
+    
+
 }

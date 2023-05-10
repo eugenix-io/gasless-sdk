@@ -1,6 +1,6 @@
 import { abi } from '../abis/ERC20';
 import { getMerchantForSwapTransaction } from '../factories/merchant.factory';
-import { getNonce, generateFunctionSignature, formatMetaTransactionSignature, sendNativeApprovalTxn } from '../utils';
+import { getNonce, generateFunctionSignature, formatMetaTransactionSignature, sendNativeApprovalTxn, getGaspayConfig } from '../utils';
 
 type ApprovalSignature = {
     dataToSign: any;
@@ -11,6 +11,11 @@ type Provider = {
   chainId: string;
   rpcUrl: string;
   flintContract: string;
+}
+
+type GaspayConfig = {
+  contractUrl: string;
+  providerUrl: string;
 }
 
 interface SwapData {
@@ -42,7 +47,6 @@ const providers: Record<number, Provider> = {
 
 export class GaspayManager {
   protected apiKey;
-  protected providerInfo = {};
   /**
    * apiKey to initialize the Gaspaymanager
    * This api key is going to be used for backend api calls
@@ -53,7 +57,6 @@ export class GaspayManager {
     this.apiKey = apiKey;
     // TODO Download the config from backend on initalization
     // Things like provider Urls, flint contract info etc
-    this.providerInfo = {}
   }
 
   /**
@@ -114,6 +117,11 @@ export class GaspayManager {
     // Get the provider
     const swapProvider: any = getMerchantForSwapTransaction(merchantApiKey);
     swapProvider.swapTransaction(signature, params, chainId, walletAddress, merchantApiKey);
+  }
+
+  public async getGaspayConfigForCurrentSession (chainId: string) {
+    const result: GaspayConfig | undefined = await getGaspayConfig(chainId);
+    return result;
   }
 
 };

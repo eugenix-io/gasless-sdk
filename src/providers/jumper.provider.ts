@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getFlintContractDetails, getSignatureParameters } from '../utils';
+import Web3 from 'web3';
 
 // @ts-expect-error
 import { Contract } from 'ethers';
@@ -78,14 +79,19 @@ const getSwapSignature = async (params: JumperExchangeParams, chainId: string, w
     } = params;
 
     // Format message to be signed
-    const message = {
+    const messagePayload = {
         nonce: parseInt(NONCE, 10),
         minAmount: _minAmount,
         receiver: _receiver,
         transactionId: _transactionId
     };
 
-    const salt = '0x0000000000000000000000000000000000000000000000000000000000000089';
+    const salt = Web3.utils.padLeft(`0x${chainId.toString()}`, 64);
+
+    console.log(salt, "Salt here$$$");
+    
+
+    // const salt = '0x0000000000000000000000000000000000000000000000000000000000000089';
 
     const dataToSign = {
         types: {
@@ -99,7 +105,7 @@ const getSwapSignature = async (params: JumperExchangeParams, chainId: string, w
             salt,
         },
         primaryType: 'SwapWithoutFeesJumper',
-        message: message,
+        message: messagePayload,
     };
 
     return dataToSign;

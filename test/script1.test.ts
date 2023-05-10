@@ -11,10 +11,30 @@ enum ERROR {
     NO_SIGNATURE = 'Invalid signature'
 }
 
+type GaspayConfig = {
+    contractUrl: string;
+    providerUrl: string;
+}
+
 describe('Testing chains info',  async () => {
     let gasypayManager: GaspayManager;
+    let gaspayConfig: GaspayConfig | undefined;
+
     before('Setting up Gaspay manager', () => {
         gasypayManager = new GaspayManager('7128931bksjdbfkj-fdsfsui8dfsf');
+        
+    });
+
+    it('Getting config', async () => {
+        const chainId = '137';
+        const result = await gasypayManager.getGaspayConfigForCurrentSession(chainId);
+        console.log(result, "Config");
+
+        gaspayConfig = result;
+        
+        const isValid = result ? true : false;
+
+        expect(isValid).true
     })
 
     it('Checking for contract address for a given chain id', async () => {
