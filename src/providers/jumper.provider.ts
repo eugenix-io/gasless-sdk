@@ -44,31 +44,40 @@ const domainType = [
 ];
 
 const swapTransaction = async (signature: string, params: JumperExchangeParams, chainId: string, walletAddress: string, merchantApiKey: string) => {
-    // send to relayer
+    try {
 
-    const contractDetails: ContractDetails | undefined = await getFlintContractDetails(chainId);
+        // send to relayer
 
-    const flintContract = contractDetails?.flintContract;
+        const contractDetails: ContractDetails | undefined = await getFlintContractDetails(chainId);
 
-    const NONCE = await flintContract?.nonces(walletAddress);
+        const flintContract = contractDetails?.flintContract;
 
-    const { r, s, v } = getSignatureParameters(signature);
+        const NONCE = await flintContract?.nonces(walletAddress);
 
-    const payload = {
-        params,
-        sigR: r,
-        sigS: s,
-        sigV: v,
-        chainId,
-        nonce: parseInt(NONCE, 10),
-        walletAddress,
-        merchantApiKey
-    };
+        const { r, s, v } = getSignatureParameters(signature);
 
-    const resp = await axios.post(
-        `http://localhost:3000/faucet/v1/swap/gasless-merchant-swap`,
-        payload
-    )
+        const payload = {
+            params,
+            sigR: r,
+            sigS: s,
+            sigV: v,
+            chainId,
+            nonce: parseInt(NONCE, 10),
+            walletAddress,
+            merchantApiKey
+        };
+
+        const resp = await axios.post(
+            `http://localhost:3000/faucet/v1/swap/gasless-merchant-swap`,
+            payload
+        )
+
+        return resp.data;
+        
+    } catch (error) {
+        console.log(error, "Error in swapTransaction");
+    }
+    
 }
 
 const getSwapSignature = async (params: JumperExchangeParams, chainId: string, walletAddress: string): Promise<unknown | undefined> => {

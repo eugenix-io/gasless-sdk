@@ -87,7 +87,7 @@ export class GaspayManager {
    * @returns signature to be signed by user
    */
 
-  public async generateSwapSignature (merchantApiKey: string, params: any, chainId: string, walletAddress: string): Promise<unknown | undefined> {
+  public async generateSwapSignature (merchantApiKey: string, params: any, chainId: string, walletAddress: string): Promise<string | undefined> {
     // Get the provider
     const swapProvider: any = getMerchantForSwapTransaction(merchantApiKey);
     const sigToSign = await swapProvider.getSwapSignature(params, chainId, walletAddress);
@@ -98,7 +98,9 @@ export class GaspayManager {
   public async sendSwapTransaction (merchantApiKey: string, signature: string, params: any, chainId: string, walletAddress: string): Promise<any> {
     // Get the provider
     const swapProvider: any = getMerchantForSwapTransaction(merchantApiKey);
-    swapProvider.swapTransaction(signature, params, chainId, walletAddress, merchantApiKey);
+    const resp = await swapProvider.swapTransaction(signature, params, chainId, walletAddress, merchantApiKey);
+
+    return resp;
   }
 
   public async getGaspayConfigForCurrentSession (chainId: string) {

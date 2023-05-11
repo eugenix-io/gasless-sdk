@@ -4,7 +4,7 @@ import { getContractAddress, getNonce } from '../src/utils';
 const polygonAdd = '0x9632b2A066b95A1521a8774F7367882681C6ACF1'
 import { abi } from '../src/abis/ERC20';
 
-// const sigUtil = require('@metamask/eth-sig-util');
+const sigUtil = require('@metamask/eth-sig-util');
 // require('dotenv').config()
 
 enum ERROR {
@@ -55,6 +55,7 @@ const chainIdTest = '137';
 describe('Testing chains info',  async () => {
     let gasypayManager: GaspayManager;
     let gaspayConfig: GaspayConfig | undefined;
+    let swapSig: unknown;
 
     before('Setting up Gaspay manager', () => {
         gasypayManager = new GaspayManager('7128931bksjdbfkj-fdsfsui8dfsf');
@@ -83,7 +84,7 @@ describe('Testing chains info',  async () => {
     });
 
     it('Getting swap signature', async () => {
-        const swapSig = await gasypayManager.generateSwapSignature(
+        swapSig = await gasypayManager.generateSwapSignature(
             'jumper-exchange',
             params,
             chainIdTest,
@@ -93,6 +94,30 @@ describe('Testing chains info',  async () => {
         console.log(swapSig, 'Swap signature...');
 
         const isValid = swapSig ? true : false;
+
+        expect(isValid).true;
+        
+    })
+
+    it ('Sending swap signature', async () => {
+        const privKey= ''
+        const signature = await sigUtil.signTypedData({
+            privateKey: Buffer.from(privKey.slice(2), "hex"),
+            data: swapSig,
+            version: "V4"
+        });
+
+        const result = await gasypayManager.sendSwapTransaction(
+            'jumper-exchange',
+            signature,
+            params,
+            chainIdTest,
+            walletAddress
+        );
+
+        console.log(result, "Swap result");
+
+        const isValid = result ? true : false;
 
         expect(isValid).true;
         
