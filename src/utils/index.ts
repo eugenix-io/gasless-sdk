@@ -16,6 +16,7 @@ type Chain = {
 type GaspayConfig = {
     contractUrl: string;
     providerUrl: string;
+    contractABI: any;
 }
 
 type ApprovalMessage = {
@@ -35,6 +36,11 @@ type ApprovalData = {
     chainId: string;
     type: string;
     approvalContractAddress: string
+}
+
+type ContractDetails = {
+    flintContract: Contract;
+    contractAddress: string;
 }
 
 enum FlintContracts {
@@ -119,24 +125,22 @@ export const generateFunctionSignature = async (targetAbi: any, chainId: string)
     ]);
 };
 
-const getFlintContractAddress = (chainId: string): string => {
-    switch(chainId) {
-        case '137':
-            return FlintContracts.POLYGON
-        default:
-            return FlintContracts.POLYGON;
+export const getFlintContractDetails = async (chainId: string): Promise<ContractDetails | undefined> => {
+    try {
+        const config = await getGaspayConfig(chainId);
+        const provider = new ethers.JsonRpcProvider(config?.providerUrl);
+        const contractAddress = config?.contractUrl
+        const contractAbi = config?.contractABI
+
+        if (!contractAddress) throw new Error('Failed to fetch contract address!!');
+
+        const flintContract: Contract = new ethers.Contract(contractAddress, contractAbi, provider);
+
+        return  { flintContract, contractAddress };
+    } catch (error) {
+        console.log(error, "Error in getFlintContractDetails");
     }
-}
-
-
-
-export const getFlintContractDetails = (chainId: string): any => {
-
-    // TODO Get token contract from backend based on chainId
-    const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/oYL3zphjRJ5SgPB04yLeh2oh0BvtcQuI');
-    const contractAddress = getFlintContractAddress(chainId);
-    const flintContract: Contract = new ethers.Contract(contractAddress, flintABI, provider);
-    return  { flintContract, contractAddress };
+    
 
 };
 

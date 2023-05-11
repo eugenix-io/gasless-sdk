@@ -16,6 +16,7 @@ type Provider = {
 type GaspayConfig = {
   contractUrl: string;
   providerUrl: string;
+  contractABI: any;
 }
 
 interface SwapData {
@@ -105,7 +106,7 @@ export class GaspayManager {
    * @returns signature to be signed by user
    */
 
-  public async generateSwapSignature (merchantApiKey: string, params: any, chainId: string, walletAddress: string): Promise<string> {
+  public async generateSwapSignature (merchantApiKey: string, params: any, chainId: string, walletAddress: string): Promise<any | undefined> {
     // Get the provider
     const swapProvider: any = getMerchantForSwapTransaction(merchantApiKey);
     const sigToSign = await swapProvider.getSwapSignature(params, chainId, walletAddress);

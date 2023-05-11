@@ -24,6 +24,11 @@ interface JumperExchangeParams {
 
 }
 
+type ContractDetails = {
+    flintContract: Contract;
+    contractAddress: string;
+}
+
 const SwapWithJumperGasless = [
     { type: 'uint', name: 'nonce' },
     { type: 'uint', name: 'minAmount'},
@@ -41,9 +46,11 @@ const domainType = [
 const swapTransaction = async (signature: string, params: JumperExchangeParams, chainId: string, walletAddress: string, merchantApiKey: string) => {
     // send to relayer
 
-    const { flintContract, contractAddress } = getFlintContractDetails(chainId);
+    const contractDetails: ContractDetails | undefined = await getFlintContractDetails(chainId);
 
-    const NONCE = await flintContract.getNonces(walletAddress);
+    const flintContract = contractDetails?.flintContract;
+
+    const NONCE = await flintContract?.nonces(walletAddress);
 
     const { r, s, v } = getSignatureParameters(signature);
 
@@ -64,51 +71,61 @@ const swapTransaction = async (signature: string, params: JumperExchangeParams, 
     )
 }
 
-const getSwapSignature = async (params: JumperExchangeParams, chainId: string, walletAddress: string) => {
-    const { flintContract, contractAddress } = getFlintContractDetails(chainId);
+const getSwapSignature = async (params: JumperExchangeParams, chainId: string, walletAddress: string): Promise<unknown> => {
+    try {
+            
+        const contractDetails: ContractDetails | undefined = await getFlintContractDetails(chainId);
+        const flintContract = contractDetails?.flintContract;
+        const contractAddress = contractDetails?.contractAddress;
 
-    const NONCE = await flintContract.getNonces(walletAddress);
+        const NONCE = await flintContract?.nonces(walletAddress);
 
-    const {
-        _transactionId,
-        _integrator,
-        _referrer,
-        _receiver,
-        _minAmount,
-        _swapData
-    } = params;
+        console.log(NONCE, "NONCE for flint contract!!");
+        
 
-    // Format message to be signed
-    const messagePayload = {
-        nonce: parseInt(NONCE, 10),
-        minAmount: _minAmount,
-        receiver: _receiver,
-        transactionId: _transactionId
-    };
+        const {
+            _transactionId,
+            _integrator,
+            _referrer,
+            _receiver,
+            _minAmount,
+            _swapData
+        } = params;
 
-    const salt = Web3.utils.padLeft(`0x${chainId.toString()}`, 64);
+        // Format message to be signed
+        const messagePayload = {
+            nonce: parseInt(NONCE, 10),
+            minAmount: _minAmount,
+            receiver: _receiver,
+            transactionId: _transactionId
+        };
 
-    console.log(salt, "Salt here$$$");
-    
+        const salt = Web3.utils.padLeft(`0x${parseInt(chainId).toString(16)}`, 64);
 
-    // const salt = '0x0000000000000000000000000000000000000000000000000000000000000089';
+        console.log(salt, "Salt here$$$");
+        
 
-    const dataToSign = {
-        types: {
-            EIP712Domain: domainType,
-            SwapWithoutFeesJumper: SwapWithJumperGasless,
-        },
-        domain: {
-            name: await flintContract.getName(),
-            version: '1',
-            verifyingContract: contractAddress,
-            salt,
-        },
-        primaryType: 'SwapWithoutFeesJumper',
-        message: messagePayload,
-    };
+        // const salt = '0x0000000000000000000000000000000000000000000000000000000000000089';
 
-    return dataToSign;
+        const dataToSign = {
+            types: {
+                EIP712Domain: domainType,
+                SwapWithoutFeesJumper: SwapWithJumperGasless,
+            },
+            domain: {
+                name: await flintContract?.name(),
+                version: '1',
+                verifyingContract: contractAddress,
+                salt,
+            },
+            primaryType: 'SwapWithoutFeesJumper',
+            message: messagePayload,
+        };
+
+        return dataToSign;
+    } catch (error) {
+        console.log(error, 'Error in getSwapSignature');
+    }
 
 }
 
