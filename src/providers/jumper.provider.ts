@@ -15,12 +15,12 @@ interface SwapData {
     requiresDeposit: boolean;
 }
 interface JumperExchangeParams {
-    _transactionId: string
-    _integrator: string;
-    _referrer: string;
-    _receiver: string;
-    _minAmount: string;
-    _swapData: SwapData
+    transactionId: string
+    integrator: string;
+    referrer: string;
+    receiver: string;
+    minAmount: string;
+    swapData: SwapData
 
 }
 
@@ -71,8 +71,11 @@ const swapTransaction = async (signature: string, params: JumperExchangeParams, 
     )
 }
 
-const getSwapSignature = async (params: JumperExchangeParams, chainId: string, walletAddress: string): Promise<unknown> => {
+const getSwapSignature = async (params: JumperExchangeParams, chainId: string, walletAddress: string): Promise<unknown | undefined> => {
     try {
+
+        console.log(params, "Params for swap...");
+        
             
         const contractDetails: ContractDetails | undefined = await getFlintContractDetails(chainId);
         const flintContract = contractDetails?.flintContract;
@@ -84,20 +87,20 @@ const getSwapSignature = async (params: JumperExchangeParams, chainId: string, w
         
 
         const {
-            _transactionId,
-            _integrator,
-            _referrer,
-            _receiver,
-            _minAmount,
-            _swapData
+            transactionId,
+            integrator,
+            referrer,
+            receiver,
+            minAmount,
+            swapData
         } = params;
 
         // Format message to be signed
         const messagePayload = {
             nonce: parseInt(NONCE, 10),
-            minAmount: _minAmount,
-            receiver: _receiver,
-            transactionId: _transactionId
+            minAmount,
+            receiver,
+            transactionId
         };
 
         const salt = Web3.utils.padLeft(`0x${parseInt(chainId).toString(16)}`, 64);

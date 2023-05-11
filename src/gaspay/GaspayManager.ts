@@ -19,25 +19,6 @@ type GaspayConfig = {
   contractABI: any;
 }
 
-interface SwapData {
-  callTo: string;
-  approveTo: string;
-  sendingAssetId: string;
-  receivingAssetId: string;
-  fromAmount: string;
-  callData: string;
-  requiresDeposit: boolean;
-}
-interface JumperExchangeParams {
-  data: string;
-  _integrator: string;
-  _referrer: string;
-  _receiver: string;
-  _minAmount: string;
-  _swapData: SwapData
-
-}
-
 const providers: Record<number, Provider> = {
   137: {
     chainId: '137',
@@ -106,7 +87,7 @@ export class GaspayManager {
    * @returns signature to be signed by user
    */
 
-  public async generateSwapSignature (merchantApiKey: string, params: any, chainId: string, walletAddress: string): Promise<any | undefined> {
+  public async generateSwapSignature (merchantApiKey: string, params: any, chainId: string, walletAddress: string): Promise<unknown | undefined> {
     // Get the provider
     const swapProvider: any = getMerchantForSwapTransaction(merchantApiKey);
     const sigToSign = await swapProvider.getSwapSignature(params, chainId, walletAddress);
