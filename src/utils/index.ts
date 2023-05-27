@@ -1,14 +1,23 @@
 import { abi } from '../abis/ERC20';
+import { flintABI } from '../abis/FlintABI';
 import Web3 from 'web3';
 import axios from 'axios';
 // @ts-expect-error
-import { ethers } from 'ethers'
+import { ethers, Contract } from 'ethers';
+
+
 type Chain = {
     name: string;
     chainId: string;
     image: string;
     destinationAddress: string;
 };
+
+type GaspayConfig = {
+    contractUrl: string;
+    providerUrl: string;
+    contractABI: any;
+}
 
 type ApprovalMessage = {
     nonce: number;
@@ -28,6 +37,15 @@ type ApprovalData = {
     type: string;
     approvalContractAddress: string
 }
+
+type ContractDetails = {
+    flintContract: Contract;
+    contractAddress: string;
+}
+
+enum FlintContracts {
+    POLYGON = '0xae294F66775eDd9C81f4540eAdA41Bc1E4eE22AD'
+}
   
 enum ERROR {
       UNSUPPORTED = "Unsupported chain. Please contact support",
@@ -46,27 +64,6 @@ const metaTransactionType = [
     { name: 'nonce', type: 'uint256' },
     { name: 'from', type: 'address' },
     { name: 'functionSignature', type: 'bytes' },
-];
-
-const swapWithoutFees = [
-    { type: 'uint', name: 'amountIn' },
-    { type: 'address', name: 'tokenIn' },
-    { type: 'address', name: 'tokenOut' },
-    { type: 'address', name: 'userAddress' },
-    { type: 'address[]', name: 'path' },
-    { type: 'uint24[]', name: 'fees' },
-    { type: 'uint', name: 'nonce' },
-    { type: 'bool', name: 'isTokenOutNative' },
-];
-
-const SwapOnSushiParams = [
-    { type: 'address', name: 'tokenIn' },
-    { type: 'uint', name: 'amountIn' },
-    { type: 'address', name: 'tokenOut' },
-    { type: 'uint', name: 'amountOutMin' },
-    { type: 'address', name: 'to' },
-    { type: 'uint', name: 'nonce' },
-    { type: 'bytes', name: 'route'}
 ];
 
 
@@ -119,7 +116,7 @@ export const getContractAddress = async (chainId: string): Promise<string> => {
     throw new Error(ERROR.UNSUPPORTED);
   }
 
-  export const generateFunctionSignature = async (targetAbi: any, chainId: string) => {
+export const generateFunctionSignature = async (targetAbi: any, chainId: string) => {
     const iface = new ethers.Interface(targetAbi);
     // Approve amount for spender 1 matic
     return iface.encodeFunctionData('approve', [
@@ -128,9 +125,28 @@ export const getContractAddress = async (chainId: string): Promise<string> => {
     ]);
 };
 
+export const getFlintContractDetails = async (chainId: string): Promise<ContractDetails | undefined> => {
+    try {
+        const config = await getGaspayConfig(chainId);
+        const provider = new ethers.JsonRpcProvider(config?.providerUrl);
+        const contractAddress = config?.contractUrl
+        const contractAbi = config?.contractABI
+
+        if (!contractAddress) throw new Error('Failed to fetch contract address!!');
+
+        const flintContract: Contract = new ethers.Contract(contractAddress, contractAbi, provider);
+
+        return  { flintContract, contractAddress };
+    } catch (error) {
+        console.log(error, "Error in getFlintContractDetails");
+    }
+    
+
+};
+
 const getName = async (tokenAddress: string) => {
     // update method to check if ABI has getNonce or nonces
-    const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/6YG2I64dtdEnsF68sTYQIYy--Fa5roqh');
+    const provider = new ethers.JsonRpcProvider('https://polygon-mainnet.g.alchemy.com/v2/oYL3zphjRJ5SgPB04yLeh2oh0BvtcQuI');
     const tokenContract = new ethers.Contract(tokenAddress, abi, provider);
     return await tokenContract.name();
 };
@@ -185,4 +201,21 @@ export const sendNativeApprovalTxn = async (signature: string, functionSignature
 
     return txResp.data;
     
+}
+
+export const getGaspayConfig = async (chainId: string): Promise<GaspayConfig | undefined> => {
+
+    try {
+        const resp = await axios.get(`http://localhost:3000/faucet/v1/config/gas-router-config?chainId=${chainId}`);
+        const result: GaspayConfig = resp.data;
+
+        return result
+
+    } catch (error) {
+        console.log(error, 'Error in getGaspayConfig');
+        
+    }
+
+    
+
 }
